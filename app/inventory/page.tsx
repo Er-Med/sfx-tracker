@@ -1,32 +1,39 @@
+import Pagination from "@/components/Pagination";
 import Sidebar from "@/components/Sidebar";
 import { deleteProduct } from "@/lib/actions/products";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export default async function InventoryPage({ searchParams }: { searchParams: Promise<{ q?: string; }>; }) {
+export default async function InventoryPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string; }>; }) {
 
- // Get all products
+ // Get authenticated user - redirects to sign-in if not logged in
  const user = await getCurrentUser();
  const userId = user.id;
 
-
+ // Extract search and pagination parameters from URL
  const params = await searchParams;
- const q = (params.q ?? "").trim();
+ const q = (params.q ?? "").trim(); // Search query
+ const page = Math.max(Number(params.page ?? 1)); // Current page number
+ const pageSize = 5; // Items per page
 
- // const totalProducts = await prisma.product.findMany({ where: { userId, name: { contains: q, mode: "insensitive" as const } } });
-
+ // Build database query conditions
  const where = {
-  userId,
-  name: { contains: q, mode: "insensitive" as const }
+  userId, // Only show products belonging to current user
+  name: { contains: q, mode: "insensitive" as const } // Case-insensitive name search
  };
 
+ // Fetch total count and paginated items in parallel for better performance
  const [totalCount, items] = await Promise.all([
   prisma.product.count({ where }),
-  prisma.product.findMany({ where })
+  prisma.product.findMany({
+   where,
+   orderBy: { createdAt: "desc" }, // Show newest products first
+   skip: (page - 1) * pageSize, // Calculate offset for pagination
+   take: pageSize // Limit results per page
+  })
  ]);
 
- const pageSize = 10;
-
+ // Calculate total pages for pagination component
  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
  return (
@@ -48,7 +55,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
     </div>
 
     <div className="space-y-6">
-     {/* Search */}
+     {/* Search Form - submits to same page with GET method */}
      <div className="bg-white rounded-lg border border-gray-200 p-6">
       <form className="flex gap-2" action="/inventory" method="GET">
        <input
@@ -62,7 +69,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
       </form>
      </div>
 
-     {/* Product Table */}
+     {/* Products Table */}
      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <table className="w-full">
        <thead className="bg-gray-50">
@@ -83,18 +90,19 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
            {product.name}
           </td>
           <td className="table-td">
-           {product.sku || "-"}
+           {product.sku || "-"} {/* Show dash if no SKU */}
           </td>
           <td className="table-td">
-           ${Number(product.price).toFixed(2)}
+           ${Number(product.price).toFixed(2)} {/* Format price to 2 decimal places */}
           </td>
           <td className="table-td">
            {product.quantity}
           </td>
           <td className="table-td">
-           {product.lowStock || "-"}
+           {product.lowStock || "-"} {/* Show dash if no low stock threshold */}
           </td>
           <td className="table-td">
+           {/* Server action form for deleting products */}
            <form action={async (formData: FormData) => {
             "use server";
             await deleteProduct(formData);
@@ -110,7 +118,15 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
        </tbody>
       </table>
 
-
+      {/* Show pagination only if there are multiple pages */}
+      {totalPages > 1 && (
+       <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Pagination currentPage={page}
+         totalPages={totalPages}
+         baseUrl="/inventory"
+         searchParams={{ q, pageSize: String(pageSize) }} />
+       </div>
+      )}
      </div>
     </div>
    </main>
