@@ -21,9 +21,9 @@ async function DashboardPage() {
       where: { userId },
       select: { price: true, quantity: true, createdAt: true },
     }),
-  ])
+  ]);
 
-  const totalValue = allProducts.reduce((sum, product) => sum + Number(product.price) * Number(product.quantity), 0)
+  const totalValue = allProducts.reduce((sum, product) => sum + Number(product.price) * Number(product.quantity), 0);
 
 
   // const totalProducts = await prisma.product.count({ where: { userId } })
@@ -48,7 +48,7 @@ async function DashboardPage() {
     weekEnd.setDate(weekEnd.getDate() + 6);
     weekStart.setHours(23, 59, 59, 999);
 
-    const weekLabel = `${String(weekStart.getMonth() + 1).padStart(2, '0')}/${String(weekStart.getDate()).padStart(2, '0')}`
+    const weekLabel = `${String(weekStart.getMonth() + 1).padStart(2, '0')}/${String(weekStart.getDate()).padStart(2, '0')}`;
 
     const weekProducts = allProducts.filter((product) => {
       const productDate = new Date(product.createdAt);
@@ -66,7 +66,7 @@ async function DashboardPage() {
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 5
-  })
+  });
 
 
   const inStockCount = allProducts.filter((p) => Number(p.quantity) > 5).length;
@@ -196,7 +196,7 @@ async function DashboardPage() {
                     >
                       {product.quantity} units</div>
                   </div>
-                )
+                );
               })}
             </div>
           </div>

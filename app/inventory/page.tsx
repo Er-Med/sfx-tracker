@@ -14,7 +14,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
  const params = await searchParams;
  const q = (params.q ?? "").trim(); // Search query
  const page = Math.max(Number(params.page ?? 1)); // Current page number
- const pageSize = 5; // Items per page
+ const pageSize = 10; // Items per page
 
  // Build database query conditions
  const where = {

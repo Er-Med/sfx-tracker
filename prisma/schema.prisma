@@ -16,12 +16,12 @@ datasource db {
 
 model Product {
   id        String   @id @default(uuid())
-  userId    String //stack auth user id
+  userId    String 
   name      String
   sku       String?  @unique
   price     Decimal  @db.Decimal(12, 2)
   quantity  Int      @default(0)
-  lowStock  Int?
+  lowStock Int? @default(5) 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

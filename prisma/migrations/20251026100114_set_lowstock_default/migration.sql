@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Product" ALTER COLUMN "lowStock" DROP NOT NULL,
+ALTER COLUMN "lowStock" SET DEFAULT 5;
